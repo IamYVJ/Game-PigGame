@@ -30,7 +30,25 @@
       <button class="btn btn--new">🔄 New game</button>
       <button class="btn btn--roll">🎲 Roll dice</button>
       <button class="btn btn--hold">📥 Hold</button>
+      <button class="btn btn--rules">❔ How to play</button>
     </main>
+
+    <div class="modal hidden">
+      <button class="modal__close" aria-label="Close">&times;</button>
+      <h2 class="modal__title">How to Play</h2>
+      <p class="modal__intro">
+        Pig is a two-player turn-based dice game. First to reach
+        <strong>100 points</strong> wins.
+      </p>
+      <ol class="modal__rules">
+        <li>On your turn, press <strong>🎲 Roll dice</strong> as many times as you like. Each roll (2–6) is added to your <em>current</em> score.</li>
+        <li>Roll a <strong>1</strong> and you lose your current score — your turn passes to the other player.</li>
+        <li>Press <strong>📥 Hold</strong> to bank your current score into your total and end your turn safely.</li>
+        <li>Press <strong>🔄 New game</strong> to reset and start over.</li>
+      </ol>
+    </div>
+    <div class="overlay hidden"></div>
+
     <script src="script.js"></script>
   </body>
 </html>
