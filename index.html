@@ -9,6 +9,13 @@
   </head>
   <body>
     <main>
+      <div class="optimal-toggle">
+        <label class="switch">
+          <input type="checkbox" class="optimal-checkbox" />
+          <span class="slider"></span>
+        </label>
+        <span class="optimal-toggle__label">💡 Optimal play</span>
+      </div>
       <section class="player player--0 player--active">
         <h2 class="name" id="name--0">Player 1</h2>
         <p class="score" id="score--0">0</p>
@@ -16,6 +23,7 @@
           <p class="current-label">Current</p>
           <p class="current-score" id="current--0">0</p>
         </div>
+        <p class="optimal-hint hidden" id="hint--0"></p>
       </section>
       <section class="player player--1">
         <h2 class="name" id="name--1">Player 2</h2>
@@ -24,16 +32,21 @@
           <p class="current-label">Current</p>
           <p class="current-score" id="current--1">0</p>
         </div>
+        <p class="optimal-hint hidden" id="hint--1"></p>
       </section>
 
       <img src="dice-5.png" alt="Playing dice" class="dice hidden" />
       <button class="btn btn--new">🔄 New game</button>
       <button class="btn btn--roll">🎲 Roll dice</button>
       <button class="btn btn--hold">📥 Hold</button>
-      <button class="btn btn--rules">❔ How to play</button>
     </main>
 
-    <div class="modal hidden">
+    <footer class="info-bar">
+      <button class="btn btn--rules">❔ How to play</button>
+      <button class="btn btn--optimal-info">💡 How optimal play works</button>
+    </footer>
+
+    <div class="modal modal--rules hidden">
       <button class="modal__close" aria-label="Close">&times;</button>
       <h2 class="modal__title">How to Play</h2>
       <p class="modal__intro">
@@ -46,6 +59,28 @@
         <li>Press <strong>📥 Hold</strong> to bank your current score into your total and end your turn safely.</li>
         <li>Press <strong>🔄 New game</strong> to reset and start over.</li>
       </ol>
+    </div>
+
+    <div class="modal modal--optimal hidden">
+      <button class="modal__close" aria-label="Close">&times;</button>
+      <h2 class="modal__title">How Optimal Play Works</h2>
+      <p class="modal__intro">
+        With the toggle on, the indicator tells the active player whether to
+        <strong>roll</strong> or <strong>hold</strong> — picking the move that
+        gives the highest chance of <em>winning the game</em>, not just the most
+        points this turn.
+      </p>
+      <ol class="modal__rules">
+        <li>Every situation is captured by three numbers: <strong>your score</strong>, your <strong>opponent's score</strong>, and your <strong>current turn total</strong>.</li>
+        <li>For each one we work out your probability of eventually winning if you <em>roll</em> versus if you <em>hold</em>, allowing for the 1-in-6 chance of busting on a 1.</li>
+        <li>Those probabilities depend on one another, so they're solved by <strong>value iteration</strong>: every state is refined over and over until the numbers stop changing.</li>
+        <li>The indicator then recommends whichever action has the higher win probability and shows that percentage.</li>
+      </ol>
+      <p class="modal__note">
+        This is the game-theoretically optimal strategy described by Neller &amp;
+        Presser. A fun consequence: with perfect play, the player who goes first
+        wins about <strong>53%</strong> of the time.
+      </p>
     </div>
     <div class="overlay hidden"></div>
 
