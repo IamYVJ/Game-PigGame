@@ -144,6 +144,11 @@ main {
   box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.15);
 }
 
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .btn:focus {
   outline: none;
 }
@@ -168,12 +173,48 @@ main {
   z-index: 2;
 }
 
-.optimal-toggle__label {
+.optimal-toggle__label,
+.cpu-toggle__label {
   font-size: 1.5rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: #444;
+}
+
+.cpu-toggle {
+  position: absolute;
+  top: 4rem;
+  right: 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+  z-index: 2;
+}
+
+.cpu-toggle__row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cpu-difficulty {
+  font-family: inherit;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #444;
+  background-color: rgba(255, 255, 255, 0.6);
+  border: none;
+  border-radius: 50rem;
+  padding: 0.5rem 1.2rem;
+  cursor: pointer;
+}
+
+.cpu-difficulty:focus {
+  outline: none;
 }
 
 .switch {

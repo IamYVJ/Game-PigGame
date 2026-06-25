@@ -16,6 +16,20 @@
         </label>
         <span class="optimal-toggle__label">💡 Optimal play</span>
       </div>
+      <div class="cpu-toggle">
+        <div class="cpu-toggle__row">
+          <span class="cpu-toggle__label">🤖 Computer</span>
+          <label class="switch">
+            <input type="checkbox" class="cpu-checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <select class="cpu-difficulty hidden" aria-label="Computer difficulty">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
       <section class="player player--0 player--active">
         <h2 class="name" id="name--0">Player 1</h2>
         <p class="score" id="score--0">0</p>

@@ -104,6 +104,106 @@ const updateOptimalHint = function () {
   (action === 'roll' ? btnRoll : btnHold).classList.add('btn--optimal');
 };
 
+// ----- Computer opponent -----
+const cpuCheckbox = document.querySelector('.cpu-checkbox');
+const cpuDifficultyEl = document.querySelector('.cpu-difficulty');
+const name1El = document.getElementById('name--1');
+
+const CPU = 1; // Player 2 is the computer
+const CPU_DELAY = 900; // ms between the computer's actions
+let cpuEnabled = false;
+let cpuDifficulty = 'medium';
+let cpuBusy = false; // locks human input while the computer is playing
+let cpuToken = 0; // bumped on new game to cancel any scheduled computer steps
+
+const ensurePolicy = function () {
+  if (!policyP) policyP = computeOptimalPolicy();
+};
+
+// Core moves, shared by the human buttons and the computer.
+const doRoll = function () {
+  const dice = Math.trunc(Math.random() * 6) + 1;
+  diceEl.src = `dice-${dice}.png`;
+  diceEl.classList.remove('hidden');
+
+  if (dice !== 1) {
+    currentScore += dice;
+    document.getElementById(`current--${activePlayer}`).textContent =
+      currentScore;
+  } else {
+    switchPlayer();
+  }
+  return dice;
+};
+
+const doHold = function () {
+  scores[activePlayer] += currentScore;
+  document.getElementById(`score--${activePlayer}`).textContent =
+    scores[activePlayer];
+
+  if (scores[activePlayer] >= 100) {
+    playing = false;
+    diceEl.classList.add('hidden');
+    document
+      .querySelector(`.player--${activePlayer}`)
+      .classList.add('player--winner');
+    document
+      .querySelector(`.player--${activePlayer}`)
+      .classList.remove('player--active');
+  } else {
+    switchPlayer();
+  }
+};
+
+const setCpuBusy = function (busy) {
+  cpuBusy = busy;
+  btnRoll.disabled = busy;
+  btnHold.disabled = busy;
+};
+
+// Decide the computer's move for the chosen difficulty.
+const cpuDecision = function (i, j, k) {
+  if (i + k >= TARGET) return 'hold'; // banking now wins the game
+  if (cpuDifficulty === 'hard') {
+    ensurePolicy();
+    return recommend(i, j, k).action;
+  }
+  const holdAt = cpuDifficulty === 'easy' ? 10 : 20; // medium = classic "hold at 20"
+  return k >= holdAt ? 'hold' : 'roll';
+};
+
+const maybeStartComputerTurn = function () {
+  if (cpuEnabled && playing && activePlayer === CPU && !cpuBusy) {
+    setCpuBusy(true);
+    const token = cpuToken;
+    setTimeout(() => computerStep(token), CPU_DELAY);
+  }
+};
+
+// One computer action, then either schedule the next or hand control back.
+const computerStep = function (token) {
+  if (token !== cpuToken || !playing || !cpuEnabled || activePlayer !== CPU) {
+    setCpuBusy(false);
+    return;
+  }
+
+  const action = cpuDecision(scores[CPU], scores[1 - CPU], currentScore);
+
+  if (action === 'roll') {
+    const dice = doRoll();
+    updateOptimalHint();
+    if (dice === 1) {
+      setCpuBusy(false); // busted: turn has passed back to the human
+    } else {
+      setTimeout(() => computerStep(token), CPU_DELAY);
+    }
+  } else {
+    doHold();
+    updateOptimalHint();
+    setCpuBusy(false); // held: turn has passed back (or the game is over)
+  }
+};
+
 // Starting conditions
 const init = function () {
   scores = [0, 0];
@@ -122,6 +222,8 @@ const init = function () {
   player0El.classList.add('player--active');
   player1El.classList.remove('player--active');
 
+  cpuToken++; // cancel any scheduled computer steps from the previous game
+  setCpuBusy(false);
   updateOptimalHint();
 };
 init();
@@ -134,60 +236,19 @@ const switchPlayer = function () {
   player1El.classList.toggle('player--active');
 };
 
-// Rolling dice functionality
+// Human controls (ignored while the computer is taking its turn)
 btnRoll.addEventListener('click', function () {
-  if (playing) {
-    // 1. Generating a random dice roll
-    const dice = Math.trunc(Math.random() * 6) + 1;
-
-    // 2. Display dice
-    diceEl.src = `dice-${dice}.png`;
-    diceEl.classList.remove('hidden');
-    
-    // 3. Check for rolled 1
-    if (dice !== 1) {
-      // Add dice to current score
-      currentScore += dice;
-      document.getElementById(
-        `current--${activePlayer}`
-      ).textContent = currentScore;
-    } else {
-      // Switch to next player
-      switchPlayer();
-    }
-
-    updateOptimalHint();
-  }
+  if (!playing || cpuBusy) return;
+  doRoll();
+  updateOptimalHint();
+  maybeStartComputerTurn();
 });
 
 btnHold.addEventListener('click', function () {
-  if (playing) {
-    // 1. Add current score to active player's score
-    scores[activePlayer] += currentScore;
-    // scores[1] = scores[1] + currentScore
-
-    document.getElementById(`score--${activePlayer}`).textContent =
-      scores[activePlayer];
-
-    // 2. Check if player's score is >= 100
-    if (scores[activePlayer] >= 100) {
-      // Finish the game
-      playing = false;
-      diceEl.classList.add('hidden');
-
-      document
-        .querySelector(`.player--${activePlayer}`)
-        .classList.add('player--winner');
-      document
-        .querySelector(`.player--${activePlayer}`)
-        .classList.remove('player--active');
-    } else {
-      // Switch to the next player
-      switchPlayer();
-    }
-
-    updateOptimalHint();
-  }
+  if (!playing || cpuBusy) return;
+  doHold();
+  updateOptimalHint();
+  maybeStartComputerTurn();
 });
 
 btnNew.addEventListener('click', init);
@@ -207,6 +268,20 @@ optimalCheckbox.addEventListener('change', function () {
   } else {
     updateOptimalHint();
   }
+});
+
+// Enable / disable the computer opponent (Player 2)
+cpuCheckbox.addEventListener('change', function () {
+  cpuEnabled = cpuCheckbox.checked;
+  cpuDifficultyEl.classList.toggle('hidden', !cpuEnabled);
+  name1El.textContent = cpuEnabled ? '🤖 Computer' : 'Player 2';
+  if (cpuEnabled && cpuDifficulty === 'hard') ensurePolicy();
+  maybeStartComputerTurn(); // take over immediately if it is already Player 2's turn
+});
+
+cpuDifficultyEl.addEventListener('change', function () {
+  cpuDifficulty = cpuDifficultyEl.value;
+  if (cpuEnabled && cpuDifficulty === 'hard') ensurePolicy();
 });
 
 // Info modals (how to play / how optimal play works)
